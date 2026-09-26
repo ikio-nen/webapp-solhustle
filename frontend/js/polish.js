@@ -54,9 +54,18 @@
          fade the backdrop in whenever they are shown. --- */
   var OVERLAY_IDS = ["portal-login-overlay", "tx-modal-overlay"];
   var faded = new WeakSet();
+  // Throttle map: the MutationObserver below also fires on the style writes
+  // our own GSAP tween performs. Without this, each tween tick re-triggers
+  // fadeOverlay -> new tween -> new tick... an exponential pile-up that
+  // crashes the tab (Aw, Snap! Out of Memory) on the login gate.
+  var lastFade = new WeakMap();
 
   function fadeOverlay(el) {
     if (el.style.display === "none") return;
+    var now = (window.performance && performance.now()) || Date.now();
+    if (lastFade.has(el) && now - lastFade.get(el) < 600) return; // observer echo; ignore
+    lastFade.set(el, now);
+    gsap.killTweensOf(el);
     gsap.fromTo(
       el,
       { opacity: 0 },
