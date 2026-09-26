@@ -308,10 +308,11 @@ app.post("/demo/fast-forward/:id", requireAuth, h_wrap(async (req, res) => {
 // --- frontend --------------------------------------------------------------------------
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 app.use(express.static(path.join(__dirname, "../frontend")));
-app.get(["/", "/landing"], (_req, res) => res.sendFile(path.join(__dirname, "../public/landing.html")));
-app.get("/buyer", (_req, res) => res.sendFile(path.join(__dirname, "../public/buyer.html")));
-app.get("/seller", (_req, res) => res.sendFile(path.join(__dirname, "../public/seller.html")));
-app.get("/admin", (_req, res) => res.sendFile(path.join(__dirname, "../public/admin.html")));
+app.get(["/", "/landing"], (_req, res) => res.sendFile(path.join(__dirname, "../frontend/landing.html")));
+app.get("/buyer", (_req, res) => res.sendFile(path.join(__dirname, "../frontend/buyer.html")));
+app.get("/seller", (_req, res) => res.sendFile(path.join(__dirname, "../frontend/seller.html")));
+app.get("/admin", (_req, res) => res.sendFile(path.join(__dirname, "../frontend/admin.html")));
+app.get("/signup", (_req, res) => res.sendFile(path.join(__dirname, "../frontend/signup.html")));
 
 // --- 404 + error handler ------------------------------------------------------------------
 app.use((_req, res) => res.status(404).json({ error: "not found" }));

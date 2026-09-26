@@ -6,6 +6,7 @@
   <title>Solhustle — Seller Portal</title>
   <link rel="stylesheet" href="/css/style.css" />
   <link rel="stylesheet" href="/css/polish.css" />
+  <link rel="stylesheet" href="/css/components.css" />
 </head>
 <body>
 <main>
@@ -21,6 +22,10 @@
     </div>
     <div class="row">
       <span class="pill ok" id="s-balance" style="font-weight:700; font-size:12px;">payout balance: …</span>
+      <span class="notif-bell" id="notif-bell" title="Notifications">
+        <button class="btn sec notif-bell-btn" style="font-size:14px;">🔔</button>
+        <span class="notif-badge" style="display:none;">0</span>
+      </span>
       <button class="btn sec" id="btn-copy" style="font-size:11px;">Copy Wallet</button>
       <button class="btn sec" id="btn-refresh" style="font-size:11px;">↻ Refresh</button>
       <button class="btn sec" id="btn-signout" style="font-size:11px; border-color:rgba(239,68,68,0.4); color:#f87171;">Sign Out</button>
@@ -31,6 +36,9 @@
   <div class="row" style="margin:20px 0 16px; gap:8px; flex-wrap:wrap;">
     <button class="btn" id="tab-active" onclick="switchTab('active')">🛠️ 01 · My Active Contracts</button>
     <button class="btn sec" id="tab-market" onclick="switchTab('market')">🌐 02 · Browse Open Marketplace</button>
+    <button class="btn sec" id="tab-dash" onclick="switchTab('dash')">📊 03 · Dashboard</button>
+    <button class="btn sec" id="tab-profile" onclick="switchTab('profile')">👤 04 · My Profile</button>
+    <button class="btn sec" id="tab-rewards" onclick="switchTab('rewards')">🏆 05 · Rewards</button>
   </div>
 
   <!-- Section 1: Active Jobs -->
@@ -57,11 +65,67 @@
       <div class="card dim">Loading marketplace…</div>
     </div>
   </div>
+
+  <!-- Section 3: Dashboard (market snapshot) -->
+  <div id="section-dash" style="display:none;">
+    <div style="display:flex; align-items:center; gap:10px; margin:20px 0 8px;">
+      <span class="num-tag">03</span>
+      <h3 style="font-size:18px; margin:0;">FREELANCER DASHBOARD</h3>
+    </div>
+    <div class="dash-stats" id="dash-stats"></div>
+    <div class="card" style="margin-top:6px;">
+      <h3 style="margin:0 0 4px;">📡 Market Snapshot <span class="dim" style="font-size:11px; font-weight:400;">— live funded gigs</span></h3>
+      <div style="overflow-x:auto;">
+        <table class="snap-table">
+          <thead><tr><th>Job</th><th>Budget</th><th>Escrow</th><th>Status</th><th></th></tr></thead>
+          <tbody id="dash-market-body"><tr><td colspan="5" class="dim">loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 4: My Profile (onboarding) -->
+  <div id="section-profile" style="display:none;">
+    <div style="display:flex; align-items:center; gap:10px; margin:20px 0 8px;">
+      <span class="num-tag">04</span>
+      <h3 style="font-size:18px; margin:0;">MY PUBLIC PROFILE <span class="dim" style="font-size:12px; font-weight:400;">— this is what clients see</span></h3>
+    </div>
+    <div class="card">
+      <div class="onboard-grid">
+        <div class="full"><label class="field-lbl">Headline</label><input id="pf-headline" placeholder="e.g. Solana dApp Developer" /></div>
+        <div class="full"><label class="field-lbl">Bio</label><textarea id="pf-bio" rows="3" style="width:100%; background:var(--card2); border:1px solid var(--line); border-radius:8px; color:var(--txt); padding:10px; font:inherit; font-size:13px;" placeholder="What do you do best?"></textarea></div>
+        <div><label class="field-lbl">Degrees</label><input id="pf-degrees" placeholder="e.g. B.Tech CSE, M.S." /></div>
+        <div><label class="field-lbl">Known languages</label><input id="pf-languages" placeholder="e.g. Rust, TypeScript, English" /></div>
+        <div><label class="field-lbl">Age</label><input id="pf-age" type="number" min="13" max="120" /></div>
+        <div><label class="field-lbl">Field work experience (years)</label><input id="pf-exp" type="number" min="0" max="60" /></div>
+        <div><label class="field-lbl">Hourly rate (SOL)</label><input id="pf-rate" type="number" step="0.01" min="0" /></div>
+        <div><label class="field-lbl">Points balance</label><input id="pf-points" disabled style="opacity:.6;" /></div>
+      </div>
+      <div class="row" style="margin-top:16px; justify-content:flex-end;">
+        <button class="btn" id="btn-save-profile">💾 Save Profile</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 5: Rewards (points redeem) -->
+  <div id="section-rewards" style="display:none;">
+    <div style="display:flex; align-items:center; gap:10px; margin:20px 0 8px;">
+      <span class="num-tag">05</span>
+      <h3 style="font-size:18px; margin:0;">REWARDS — REDEEM YOUR POINTS</h3>
+    </div>
+    <div class="points-hero" style="margin-bottom:6px;">
+      <div style="font-size:34px;">🏆</div>
+      <div><div class="pts" id="rw-points">…</div><div class="dim" style="font-size:12px;">points available</div></div>
+      <div class="dim" style="font-size:12px; margin-left:auto; max-width:280px;">Earn points by shipping work. Redeem them for fee waivers, badges &amp; boosts.</div>
+    </div>
+    <div class="perk-grid" id="perk-grid"></div>
+  </div>
 </main>
 
 <script src="/vendor/nacl-fast.min.js"></script>
 <script src="/js/config.js"></script>
 <script src="/js/common.js"></script>
+<script src="/js/components.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="/js/polish.js"></script>
 <script>
@@ -78,9 +142,102 @@
       updateBalance();
       loadActiveJobs();
       loadMarketplace();
+      SolUI.Notifications.mount("notif-bell", session.token, () => {
+        if (activeTab === "active") loadActiveJobs();
+      });
     } catch (err) {
       toast("Auth failed: " + err.message, "err");
     }
+  }
+
+  // --- Dashboard (market snapshot) ---
+  async function loadDashboard() {
+    const statsEl = $("#dash-stats");
+    try {
+      const me = await api("GET", "/me/profile", undefined, session.token);
+      const p = me.profile || {};
+      const jobs = await api("GET", "/jobs?mine=1", undefined, session.token);
+      const mine = jobs.jobs || [];
+      const active = mine.filter(j => ["in_progress", "delivered"].includes(j.status)).length;
+      const earned = mine.filter(j => j.status === "released")
+        .reduce((s, j) => s + Number(j.sol_amount || 0), 0);
+      statsEl.innerHTML = `
+        <div class="stat-card" style="--sc:#fbbf24;"><div class="s-lbl">Points</div><div class="s-val">${p.points ?? 0}</div><div class="s-sub">redeemable in Rewards</div></div>
+        <div class="stat-card" style="--sc:#6ea8fe;"><div class="s-lbl">Active contracts</div><div class="s-val">${active}</div><div class="s-sub">in progress / delivered</div></div>
+        <div class="stat-card" style="--sc:#4ade80;"><div class="s-lbl">Total earned</div><div class="s-val">${earned.toFixed(2)} SOL</div><div class="s-sub">released payouts</div></div>
+        <div class="stat-card" style="--sc:#a78bfa;"><div class="s-lbl">Hourly rate</div><div class="s-val">${p.hourly_rate_sol ?? "—"} SOL</div><div class="s-sub">${esc(p.headline || "freelancer")}</div></div>`;
+      const market = await api("GET", "/jobs", undefined, session.token);
+      const open = (market.jobs || []).filter(j => ["open", "funded"].includes(j.status)).slice(0, 8);
+      $("#dash-market-body").innerHTML = open.length ? open.map(j => `
+        <tr>
+          <td><b style="color:#fff;">#${j.id} ${esc(j.title)}</b><br/><span class="dim" style="font-size:11px;">${esc((j.requirements || "").slice(0, 60))}…</span></td>
+          <td>$${esc(String(j.usd_budget ?? "—"))}</td>
+          <td class="mono">${Number(j.sol_amount || 0).toFixed(3)} SOL</td>
+          <td>${pill(j.status)}</td>
+          <td><button class="mini-btn" onclick="switchTab('market')">View</button></td>
+        </tr>`).join("")
+        : `<tr><td colspan="5" class="dim">No open gigs right now.</td></tr>`;
+    } catch (e) {
+      statsEl.innerHTML = `<div class="card dim">Could not load dashboard.</div>`;
+    }
+  }
+
+  // --- Profile (onboarding) ---
+  async function loadProfileForm() {
+    try {
+      const me = await api("GET", "/me/profile", undefined, session.token);
+      const p = me.profile || {};
+      $("#pf-headline").value = p.headline || "";
+      $("#pf-bio").value = p.bio || "";
+      $("#pf-degrees").value = p.degrees || "";
+      $("#pf-languages").value = p.languages || "";
+      $("#pf-age").value = p.age ?? "";
+      $("#pf-exp").value = p.years_experience ?? "";
+      $("#pf-rate").value = p.hourly_rate_sol ?? "";
+      $("#pf-points").value = (p.points ?? 0) + " pts";
+    } catch (e) { toast("Could not load profile", "err"); }
+  }
+  $("#btn-save-profile").onclick = () => SolUI.pendingBtn($("#btn-save-profile"), async () => {
+    const body = {
+      headline: $("#pf-headline").value.trim(),
+      bio: $("#pf-bio").value.trim(),
+      degrees: $("#pf-degrees").value.trim(),
+      languages: $("#pf-languages").value.trim(),
+    };
+    if ($("#pf-age").value) body.age = Number($("#pf-age").value);
+    if ($("#pf-exp").value) body.years_experience = Number($("#pf-exp").value);
+    if ($("#pf-rate").value) body.hourly_rate_sol = Number($("#pf-rate").value);
+    await api("POST", "/me/freelancer/profile", body, session.token);
+    toast("Profile saved — clients can see it now", "ok");
+  });
+
+  // --- Rewards (points redeem) ---
+  const PERKS = [
+    { id: "fee_waiver", cost: 100, title: "50% Platform Fee Waiver", desc: "Halve your platform fee on the next payout." },
+    { id: "artisan_badge", cost: 200, title: "Verified Artisan Badge", desc: "Gold badge on your profile for 30 days." },
+    { id: "featured_boost", cost: 300, title: "Priority Marketplace Boost", desc: "Top placement in marketplace for 7 days." },
+  ];
+  async function loadRewards() {
+    try {
+      const me = await api("GET", "/me/profile", undefined, session.token);
+      const pts = me.profile?.points ?? 0;
+      $("#rw-points").textContent = pts;
+      $("#perk-grid").innerHTML = PERKS.map(k => `
+        <div class="perk-card">
+          <div class="p-cost">🎟️ ${k.cost} <small>points</small></div>
+          <b>${k.title}</b><p>${k.desc}</p>
+          <button class="btn ${pts >= k.cost ? "" : "sec"}" data-perk="${k.id}" ${pts < k.cost ? "disabled style='opacity:.5'" : ""}>
+            ${pts >= k.cost ? "Redeem" : "Not enough points"}
+          </button>
+        </div>`).join("");
+      $("#perk-grid").querySelectorAll("[data-perk]").forEach(b => {
+        b.onclick = () => SolUI.pendingBtn(b, async () => {
+          const r = await api("POST", "/me/points/redeem", { perk: b.dataset.perk }, session.token);
+          SolUI.toast(r.message || "Perk redeemed 🎉");
+          loadRewards();
+        });
+      });
+    } catch (e) { toast("Could not load rewards", "err"); }
   }
 
   async function updateBalance() {
@@ -109,14 +266,16 @@
 
   function switchTab(tab) {
     activeTab = tab;
-    $("#tab-active").className = tab === "active" ? "btn" : "btn sec";
-    $("#tab-market").className = tab === "market" ? "btn" : "btn sec";
-
-    $("#section-active").style.display = tab === "active" ? "" : "none";
-    $("#section-market").style.display = tab === "market" ? "" : "none";
-
+    const tabs = ["active", "market", "dash", "profile", "rewards"];
+    for (const t of tabs) {
+      $("#tab-" + t).className = tab === t ? "btn" : "btn sec";
+      $("#section-" + t).style.display = tab === t ? "" : "none";
+    }
     if (tab === "active") loadActiveJobs();
     if (tab === "market") loadMarketplace();
+    if (tab === "dash") loadDashboard();
+    if (tab === "profile") loadProfileForm();
+    if (tab === "rewards") loadRewards();
   }
 
   // --- Active Jobs ---

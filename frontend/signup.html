@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Solhustle — Create Account</title>
+  <link rel="stylesheet" href="/css/style.css" />
+  <link rel="stylesheet" href="/css/polish.css" />
+  <link rel="stylesheet" href="/css/components.css" />
+</head>
+<body>
+<main style="padding:0; max-width:none;">
+  <div class="signup-split">
+    <!-- Brand side -->
+    <div class="signup-brand constellation-wrap">
+      <canvas class="constellation" id="signup-constellation"></canvas>
+      <div class="constellation-content" style="position:relative; z-index:1;">
+        <div style="font-size:30px; margin-bottom:14px;">⚡</div>
+        <h1 style="font-size:30px; font-weight:800; color:#fff; margin:0 0 12px; letter-spacing:-.5px;">Join Solhustle</h1>
+        <p class="dim" style="font-size:14px; line-height:1.7; margin:0 0 24px; max-width:340px;">
+          Post the job. Lock the money. Ship the work. Get paid — settled on Solana, priced in dollars.
+        </p>
+        <div style="display:flex; flex-direction:column; gap:12px; font-size:13px;">
+          <div>🔒 <b style="color:#fff;">Escrow-protected</b> <span class="dim">every gig</span></div>
+          <div>💸 <b style="color:#fff;">Instant SOL payouts</b> <span class="dim">on approval</span></div>
+          <div>🏆 <b style="color:#fff;">Points &amp; perks</b> <span class="dim">for top hustlers</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Form side -->
+    <div class="signup-form">
+      <span class="pill ok" style="align-self:flex-start; margin-bottom:14px;">Create your account</span>
+      <h2 style="margin:0 0 6px; font-size:22px; color:#fff;">Make an account</h2>
+      <p class="dim" style="font-size:13px; margin:0 0 20px;">A fresh Solana wallet is generated for you automatically.</p>
+
+      <label class="field-lbl">I am joining as</label>
+      <div class="role-pick">
+        <div class="role-card sel" id="role-freelancer" onclick="pickRole('freelancer')">
+          <div class="rc-ico">💼</div><b>Freelancer</b><span>Find work, get paid in SOL</span>
+        </div>
+        <div class="role-card" id="role-client" onclick="pickRole('client')">
+          <div class="rc-ico">🛒</div><b>Client</b><span>Post jobs, hire talent</span>
+        </div>
+      </div>
+
+      <div class="onboard-grid" style="margin-top:16px;">
+        <div>
+          <label class="field-lbl">Username</label>
+          <input id="su-user" placeholder="e.g. sol_builder" autocomplete="username" />
+        </div>
+        <div>
+          <label class="field-lbl">Password</label>
+          <input id="su-pass" type="password" placeholder="min 3 characters" autocomplete="new-password" />
+        </div>
+      </div>
+
+      <div id="freelancer-extra" style="margin-top:4px;">
+        <h3 style="font-size:14px; color:var(--acc); margin:18px 0 10px;">👤 Freelancer profile <span class="dim" style="font-weight:400;">— shown to clients</span></h3>
+        <div class="onboard-grid">
+          <div class="full">
+            <label class="field-lbl">Headline</label>
+            <input id="su-headline" placeholder="e.g. Solana dApp Developer" />
+          </div>
+          <div class="full">
+            <label class="field-lbl">Bio</label>
+            <textarea id="su-bio" rows="2" style="width:100%; background:var(--card2); border:1px solid var(--line); border-radius:8px; color:var(--txt); padding:10px; font:inherit; font-size:13px;" placeholder="What do you do best?"></textarea>
+          </div>
+          <div>
+            <label class="field-lbl">Degrees</label>
+            <input id="su-degrees" placeholder="e.g. B.Tech CSE" />
+          </div>
+          <div>
+            <label class="field-lbl">Known languages</label>
+            <input id="su-languages" placeholder="e.g. Rust, TypeScript" />
+          </div>
+          <div>
+            <label class="field-lbl">Age</label>
+            <input id="su-age" type="number" min="13" max="120" placeholder="25" />
+          </div>
+          <div>
+            <label class="field-lbl">Field experience (yrs)</label>
+            <input id="su-exp" type="number" min="0" max="60" placeholder="3" />
+          </div>
+          <div class="full">
+            <label class="field-lbl">Hourly rate (SOL)</label>
+            <input id="su-rate" type="number" step="0.01" min="0" placeholder="0.5" />
+          </div>
+        </div>
+      </div>
+
+      <div id="su-err" class="dim" style="color:#f87171; font-size:13px; margin-top:12px; min-height:20px;"></div>
+      <button class="btn" id="btn-signup" style="width:100%; padding:13px; font-size:15px; margin-top:6px;">Create account →</button>
+      <p class="dim" style="font-size:12px; text-align:center; margin-top:14px;">
+        Already have one? <a href="/seller" style="color:var(--acc);">Freelancer login</a> · <a href="/buyer" style="color:var(--acc);">Client login</a>
+      </p>
+    </div>
+  </div>
+</main>
+
+<script src="/js/config.js"></script>
+<script src="/js/common.js"></script>
+<script src="/js/components.js"></script>
+<script>
+  renderNavbar("signup");
+  SolUI.Constellation.init("signup-constellation", { count: 45 });
+  let role = "freelancer";
+  function pickRole(r) {
+    role = r;
+    $("#role-freelancer").classList.toggle("sel", r === "freelancer");
+    $("#role-client").classList.toggle("sel", r === "client");
+    $("#freelancer-extra").style.display = r === "freelancer" ? "" : "none";
+  }
+  $("#btn-signup").onclick = () => SolUI.pendingBtn($("#btn-signup"), async () => {
+    const username = $("#su-user").value.trim();
+    const password = $("#su-pass").value;
+    $("#su-err").textContent = "";
+    if (username.length < 3 || password.length < 3) { $("#su-err").textContent = "Username and password need at least 3 characters."; return; }
+    const body = { username, password, role };
+    if (role === "freelancer") {
+      body.headline = $("#su-headline").value.trim();
+      body.bio = $("#su-bio").value.trim();
+      body.degrees = $("#su-degrees").value.trim();
+      body.languages = $("#su-languages").value.trim();
+      if ($("#su-age").value) body.age = Number($("#su-age").value);
+      if ($("#su-exp").value) body.years_experience = Number($("#su-exp").value);
+      if ($("#su-rate").value) body.hourly_rate_sol = Number($("#su-rate").value);
+    }
+    try {
+      const r = await api("POST", "/auth/register", body);
+      const portalKey = role === "freelancer" ? "seller" : "buyer";
+      sessionStorage.setItem("solhustle.auth." + portalKey, JSON.stringify({
+token: <redacted>
+        user: r.user,
+        username: r.username,
+        role: r.user.role,
+        wallet: r.user.wallet_address,
+        secretKeyB58: r.secret_key_b58,
+      }));
+      location.href = role === "freelancer" ? "/seller" : "/buyer";
+    } catch (e) {
+      $("#su-err").textContent = e.message || "Signup failed";
+    }
+  });
+</script>
+</body>
+</html>
