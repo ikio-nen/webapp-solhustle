@@ -66,6 +66,34 @@ export async function getSolBalance(pubkey: web3.PublicKey): Promise<number> {
   return conn.getBalance(pubkey, "confirmed");
 }
 
+/**
+ * Self-healing fee funding: if the fee payer can't cover `needLamports`,
+ * try the devnet faucet automatically (best-effort). Throws a clear 402 when
+ * the wallet is empty and the faucet is throttled, instead of letting the tx
+ * die in the mempool and timing out in confirmSignature with a generic 502.
+ */
+export async function ensureFeePayerFunded(payer: web3.PublicKey, needLamports: number): Promise<void> {
+  let bal = 0;
+  try {
+    bal = await conn.getBalance(payer, "confirmed");
+  } catch {
+    bal = 0; // transient RPC error: treat as empty and try the faucet
+  }
+  if (bal >= needLamports) return;
+  const short =
+    `${payer.toBase58()} holds ${(bal / 1e9).toFixed(4)} SOL ` +
+    `but needs ~${(needLamports / 1e9).toFixed(4)} SOL`;
+  if (config.chain !== "devnet") {
+    throw new HttpError(402, `insufficient funds: ${short}; fund the wallet manually`);
+  }
+  try {
+    await requestAirdrop(payer);
+  } catch (err) {
+    const why = err instanceof Error ? err.message : String(err);
+    throw new HttpError(402, `insufficient funds: ${short}. ${why}`);
+  }
+}
+
 // --- escrow account state ------------------------------------------------------
 export async function getEscrowAccountInfo(
   address: string
@@ -121,6 +149,10 @@ export type ConfirmResult = { signature: string; explorerUrl: string; alreadyRec
  */
 export async function sendAndRecord(jobId: number, signed: SignedTransfer, instructionType: string): Promise<ConfirmResult> {
   assertBlockhashFresh(signed.blockhash);
+  // Self-healing: platform fee payer gets a faucet top-up when empty.
+  const stx = web3.Transaction.from(signed.rawTx);
+  const payer = stx.feePayer ?? stx.signatures[0]?.publicKey ?? null;
+  if (payer) await ensureFeePayerFunded(payer, 20_000); // fee headroom only; transfer amount comes from `from`
   try {
     await conn.sendRawTransaction(signed.rawTx, { skipPreflight: true, maxRetries: 3 });
   } catch (err) {
@@ -173,6 +205,12 @@ export async function confirmBuyerFunding(
   if (lamports < expectedLamports) {
     throw new HttpError(400, `insufficient transfer amount: ${lamports} < ${expectedLamports}`);
   }
+
+  // Self-healing: the buyer is both sender and fee payer here — top up via
+  // the devnet faucet when the wallet can't cover transfer + fee, so an
+  // empty wallet is never the silent reason a tx can't hit the chain.
+  const feePayer = tx.feePayer ?? tx.signatures[0]?.publicKey ?? null;
+  if (feePayer) await ensureFeePayerFunded(feePayer, lamports + 20_000);
 
   let signature = claimedSignature;
   try {
