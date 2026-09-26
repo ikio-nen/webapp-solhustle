@@ -6,11 +6,14 @@
   <title>Solhustle — Solana Escrow Freelance Marketplace</title>
   <link rel="stylesheet" href="/css/style.css" />
   <link rel="stylesheet" href="/css/polish.css" />
+  <link rel="stylesheet" href="/css/components.css" />
 </head>
 <body>
 <main>
   <!-- Hero Section -->
-  <div class="card" style="padding: 32px 28px; background: linear-gradient(180deg, #131a22 0%, #0d1218 100%);">
+  <div class="card constellation-wrap" style="padding: 32px 28px; background: linear-gradient(180deg, #131a22 0%, #0d1218 100%);">
+    <canvas class="constellation" id="hero-constellation"></canvas>
+    <div class="constellation-content">
     <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px;">
       <div style="max-width:700px;">
         <span class="pill ok" style="margin-bottom:12px;">Solana Devnet Live Hackathon Demo</span>
@@ -36,6 +39,7 @@
           <span class="k">Updated:</span><span class="dim" id="oracle-time">syncing…</span>
         </div>
       </div>
+    </div>
     </div>
   </div>
 
@@ -151,10 +155,27 @@
       </tbody>
     </table>
   </div>
+  <!-- Pricing -->
+  <h2 style="font-size:17px; margin:28px 0 4px; color:var(--acc); text-align:center;">💎 Simple, Transparent Pricing</h2>
+  <p class="dim" style="text-align:center; font-size:13px; margin:0 0 8px;">Pick the plan that fits your hustle. Every plan includes escrow protection &amp; on-chain settlement.</p>
+  <div style="text-align:center; margin:14px 0 4px;">
+    <div class="pricing-toggle">
+      <button id="bill-monthly" class="on">Monthly</button>
+      <button id="bill-yearly">Yearly <span style="font-size:10px; opacity:.8;">−25%</span></button>
+    </div>
+  </div>
+  <div class="pricing-grid" id="pricing-grid"></div>
+
+  <!-- Site Reviews -->
+  <h2 style="font-size:17px; margin:36px 0 4px; color:var(--acc); text-align:center;">⭐ What our users say</h2>
+  <p class="dim" style="text-align:center; font-size:13px; margin:0;">Real reviews from clients &amp; freelancers shipping on Solhustle.</p>
+  <div class="testi-mask" id="testi-mask"></div>
+
 </main>
 
 <script src="/js/config.js"></script>
 <script src="/js/common.js"></script>
+<script src="/js/components.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="/js/polish.js"></script>
 <script>
@@ -172,6 +193,72 @@
   }
   loadPrice();
   setInterval(loadPrice, 30000);
+
+  // --- Constellation mouse-motion hero ---
+  SolUI.Constellation.init("hero-constellation", { count: 80 });
+
+  // --- Pricing (monthly/yearly toggle) ---
+  const PLANS = [
+    { name: "Hustler", monthly: 0, yearly: 0, fee: "5% platform fee", desc: "For trying out the marketplace",
+      feats: ["Up to 3 active applications", "Standard escrow protection", "Community support", "Solscan settlement links"],
+      cta: "Start Free", popular: false },
+    { name: "Pro", monthly: 12, yearly: 9, fee: "2% platform fee", desc: "For freelancers shipping weekly",
+      feats: ["Unlimited applications", "Priority shortlist placement", "Verified Pro badge", "Advanced earnings analytics", "Points multiplier ×1.5"],
+      cta: "Go Pro", popular: true },
+    { name: "Studio", monthly: 39, yearly: 29, fee: "0% platform fee", desc: "For teams & power sellers",
+      feats: ["Everything in Pro", "Featured marketplace boost", "3 team seats", "Dedicated support", "Points multiplier ×2"],
+      cta: "Contact Sales", popular: false },
+  ];
+  let yearly = false;
+  function renderPricing() {
+    const grid = $("#pricing-grid");
+    grid.innerHTML = PLANS.map(p => {
+      const price = yearly ? p.yearly : p.monthly;
+      return `<div class="price-card ${p.popular ? "popular" : ""}">
+        ${p.popular ? `<span class="popular-badge">MOST POPULAR</span>` : ""}
+        <div class="plan-name">${p.name}</div>
+        <div class="plan-price">$${price}<small> /mo${yearly && price ? " · billed yearly" : ""}</small></div>
+        <div class="plan-desc">${p.desc} · <b style="color:var(--ok)">${p.fee}</b></div>
+        <ul class="plan-feats">${p.feats.map(f => `<li>${f}</li>`).join("")}</ul>
+        <a href="/signup" class="btn ${p.popular ? "" : "sec"}" style="text-align:center; margin-top:auto;">${p.cta}</a>
+      </div>`;
+    }).join("");
+    if (window.gsap) gsap.from("#pricing-grid .price-card", { y: 26, opacity: 0, stagger: 0.08, duration: 0.5, ease: "power2.out", clearProps: "all" });
+  }
+  $("#bill-monthly").onclick = () => { yearly = false; $("#bill-monthly").classList.add("on"); $("#bill-yearly").classList.remove("on"); renderPricing(); };
+  $("#bill-yearly").onclick = () => { yearly = true; $("#bill-yearly").classList.add("on"); $("#bill-monthly").classList.remove("on"); renderPricing(); };
+  renderPricing();
+
+  // --- Testimonials (animated columns) ---
+  const TESTIS = [
+    { t: "Got my first SOL payout 10 minutes after the client approved. The escrow vault thing just works — no chasing invoices.", n: "Aarav Mehta", r: "Freelance dApp Developer" },
+    { t: "Posted a landing-page gig at night, woke up to 6 applications with verified profiles. Hired in one click.", n: "Sarah Kim", r: "Startup Founder" },
+    { t: "The shortlist dropdown is genius. I compared portfolios side-by-side and picked the best dev in minutes.", n: "Rohan Das", r: "Client · DeFi Project" },
+    { t: "Redeemed my points for a fee waiver and kept 100% of a $400 gig. The points system actually rewards shipping.", n: "Priya Nair", r: "UI Designer" },
+    { t: "Dispute got resolved with full on-chain proof. Both sides could see the escrow balance live. Zero drama.", n: "Kabir Shah", r: "Smart Contract Auditor" },
+    { t: "As a student, the onboarding profile (degrees, languages, experience) made me look legit from day one.", n: "Ananya Iyer", r: "Freelance Writer" },
+    { t: "Work-in-progress stepper kept my client calm — they watched milestones complete in real time.", n: "Vikram Rao", r: "Full-stack Developer" },
+    { t: "Notifications told me the second I was shortlisted. Accepted from my phone, started the same day.", n: "Ishaan Verma", r: "Motion Designer" },
+    { t: "Live SOL/USD conversion at funding time means no surprise price swings. Transparent to the cent.", n: "Elena Petrova", r: "Client · NFT Collection" },
+  ];
+  const AVA_COLORS = ["linear-gradient(135deg,#6ea8fe,#a78bfa)", "linear-gradient(135deg,#4ade80,#6ea8fe)", "linear-gradient(135deg,#fbbf24,#f87171)"];
+  function testiCard(x, i) {
+    return `<div class="testi-card">
+      <p>"${x.t}"</p>
+      <div class="testi-who">
+        <div class="testi-ava" style="background:${AVA_COLORS[i % 3]}">${x.n.charAt(0)}</div>
+        <div><b>${x.n}</b><span>${x.r}</span></div>
+      </div>
+    </div>`;
+  }
+  (function renderTestis() {
+    const cols = [TESTIS.slice(0, 3), TESTIS.slice(3, 6), TESTIS.slice(6, 9)];
+    const durs = [28, 36, 32];
+    $("#testi-mask").innerHTML = cols.map((c, ci) => {
+      const cards = c.map((x, i) => testiCard(x, ci * 3 + i)).join("");
+      return `<div class="testi-col ${ci > 0 ? "opt" : ""}" style="--dur:${durs[ci]}s">${cards}${cards}</div>`;
+    }).join("");
+  })();
 </script>
 </body>
 </html>
