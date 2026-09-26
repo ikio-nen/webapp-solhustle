@@ -3,7 +3,7 @@ import bs58 from "bs58";
 import fs from "node:fs";
 import path from "node:path";
 import { db } from "./db.ts";
-import { seedDefaultCredentials } from "./db.ts";
+import { demoKeypair } from "./keys.ts";
 import { config } from "./config.ts";
 import { requestAirdrop } from "../solana/solana.ts";
 import { platformKeypair } from "./keys.ts";
@@ -17,25 +17,13 @@ import { recomputeLeaderboard } from "./leaderboard.ts";
 
 export type DemoActor = { name: string; wallet: string; secretKeyB58: string; userId: number; role: string };
 
-const DEMO_ACTORS: { name: string; file: string; role: "client" | "freelancer" | "support" | "dev" }[] = [
-  { name: "client", file: "demo_client.json", role: "client" },
-  { name: "freelancerA", file: "demo_freelancer_a.json", role: "freelancer" },
-  { name: "freelancerB", file: "demo_freelancer_b.json", role: "freelancer" },
-  { name: "support", file: "demo_support.json", role: "support" },
-  { name: "dev", file: "demo_dev.json", role: "dev" },
+const DEMO_ACTORS: { name: string; key: string; role: "client" | "freelancer" | "support" | "dev" }[] = [
+  { name: "client", key: "demo_client", role: "client" },
+  { name: "freelancerA", key: "demo_freelancer_a", role: "freelancer" },
+  { name: "freelancerB", key: "demo_freelancer_b", role: "freelancer" },
+  { name: "support", key: "demo_support", role: "support" },
+  { name: "dev", key: "demo_dev", role: "dev" },
 ];
-
-function loadDemoKeypair(file: string): web3.Keypair {
-  fs.mkdirSync(config.keysDir, { recursive: true });
-  const p = path.join(config.keysDir, file);
-  if (fs.existsSync(p)) {
-    const arr = JSON.parse(fs.readFileSync(p, "utf8")) as number[];
-    return web3.Keypair.fromSecretKey(Uint8Array.from(arr));
-  }
-  const kp = web3.Keypair.generate();
-  fs.writeFileSync(p, JSON.stringify(Array.from(kp.secretKey)));
-  return kp;
-}
 
 function upsertUser(wallet: string, role: DemoActor["role"]): number {
   const existing = db.prepare("SELECT id FROM users WHERE wallet_address = ?").get(wallet) as { id: number } | undefined;
@@ -71,13 +59,11 @@ export async function ensureDemoActors(fund: boolean): Promise<DemoActor[]> {
   await seedTaxonomy();
   const actors: DemoActor[] = [];
   for (const spec of DEMO_ACTORS) {
-    const kp = loadDemoKeypair(spec.file);
+    const kp = demoKeypair(spec.key);
     const wallet = kp.publicKey.toBase58();
     const userId = upsertUser(wallet, spec.role);
     actors.push({ name: spec.name, wallet, secretKeyB58: bs58.encode(kp.secretKey), userId, role: spec.role });
   }
-  // Keep demo logins (buyer/seller/admin) pointed at the current actors.
-  seedDefaultCredentials();
   if (fund) {
     const platform = platformKeypair();
     const platformBal = await requestAirdrop(platform.publicKey).catch(() => null);

@@ -2,6 +2,7 @@ import { DatabaseSync } from "node:sqlite";
 import fs from "node:fs";
 import path from "node:path";
 import { config } from "./config.ts";
+import { demoKeypair } from "./keys.ts";
 
 fs.mkdirSync(config.dataDir, { recursive: true });
 export const db = new DatabaseSync(path.join(config.dataDir, "app.db"));
@@ -274,16 +275,22 @@ CREATE TABLE IF NOT EXISTS user_notifications (
 `);
 
 export function seedDefaultCredentials(): void {
+  // Demo logins derive from the persisted key files (single source of truth),
+  // so buyer/seller/admin always map to wallets the server can actually sign for.
   const accounts = [
-    { username: "buyer", password: "buyer123", role: "client" },
-    { username: "seller", password: "seller123", role: "freelancer" },
-    { username: "admin", password: "admin 123", role: "dev" },
+    { username: "buyer", password: "buyer123", role: "client", key: "demo_client" },
+    { username: "seller", password: "seller123", role: "freelancer", key: "demo_freelancer_a" },
+    { username: "admin", password: "admin 123", role: "dev", key: "demo_dev" },
   ];
 
   for (const acc of accounts) {
-    // Newest user per role: tracks the current demo actor even if keypairs rotated.
-    const user = db.prepare("SELECT id FROM users WHERE role = ? ORDER BY id DESC LIMIT 1").get(acc.role) as { id: number } | undefined;
-    if (user) {
+    const wallet = demoKeypair(acc.key).publicKey.toBase58();
+    let user = db.prepare("SELECT id FROM users WHERE wallet_address = ?").get(wallet) as { id: number } | undefined;
+    if (!user) {
+      const info = db.prepare("INSERT INTO users (wallet_address, role) VALUES (?, ?)").run(wallet, acc.role);
+      user = { id: Number(info.lastInsertRowid) };
+    }
+    {
       db.prepare(`
         INSERT INTO user_credentials (user_id, username, password)
         VALUES (?, ?, ?)

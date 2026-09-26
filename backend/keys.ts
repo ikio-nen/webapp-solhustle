@@ -31,3 +31,6 @@ export const platformKeypair = () => loadOrCreate("platform", config.platformKey
 
 /** Arbiter key: signs on-chain dispute resolution moves. */
 export const arbiterKeypair = () => loadOrCreate("arbiter", config.arbiterKeyB58);
+
+/** Demo actor key: load-or-create from the persistent keys dir (no env override). */
+export const demoKeypair = (name: string) => loadOrCreate(name, undefined);
