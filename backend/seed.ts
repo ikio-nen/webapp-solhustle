@@ -3,6 +3,7 @@ import bs58 from "bs58";
 import fs from "node:fs";
 import path from "node:path";
 import { db } from "./db.ts";
+import { seedDefaultCredentials } from "./db.ts";
 import { config } from "./config.ts";
 import { requestAirdrop } from "../solana/solana.ts";
 import { platformKeypair } from "./keys.ts";
@@ -75,6 +76,8 @@ export async function ensureDemoActors(fund: boolean): Promise<DemoActor[]> {
     const userId = upsertUser(wallet, spec.role);
     actors.push({ name: spec.name, wallet, secretKeyB58: bs58.encode(kp.secretKey), userId, role: spec.role });
   }
+  // Keep demo logins (buyer/seller/admin) pointed at the current actors.
+  seedDefaultCredentials();
   if (fund) {
     const platform = platformKeypair();
     const platformBal = await requestAirdrop(platform.publicKey).catch(() => null);

@@ -1,4 +1,5 @@
 import * as web3 from "@solana/web3.js";
+import path from "node:path";
 
 const bool = (v: string | undefined) => v === "1" || v === "true" || v === "yes";
 
@@ -17,7 +18,9 @@ export const config = {
   geminiApiSecret: process.env.GEMINI_API_SECRET || undefined,
   airdropUrl: process.env.AIRDROP_URL || undefined,
   dataDir: process.env.DATA_DIR || "data",
-  keysDir: process.env.KEYS_DIR || "keys",
+  // Demo + platform keypairs live alongside the DB on the persistent volume,
+  // so wallets stay stable across redeploys (keys/ on the container is ephemeral).
+  keysDir: process.env.KEYS_DIR || path.join(process.env.DATA_DIR || "data", "keys"),
   debugLogs: bool(process.env.DEBUG_LOGS),
 } as const;
 

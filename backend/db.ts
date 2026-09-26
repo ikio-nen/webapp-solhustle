@@ -281,7 +281,8 @@ export function seedDefaultCredentials(): void {
   ];
 
   for (const acc of accounts) {
-    const user = db.prepare("SELECT id FROM users WHERE role = ? ORDER BY id ASC LIMIT 1").get(acc.role) as { id: number } | undefined;
+    // Newest user per role: tracks the current demo actor even if keypairs rotated.
+    const user = db.prepare("SELECT id FROM users WHERE role = ? ORDER BY id DESC LIMIT 1").get(acc.role) as { id: number } | undefined;
     if (user) {
       db.prepare(`
         INSERT INTO user_credentials (user_id, username, password)
