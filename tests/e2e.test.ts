@@ -35,7 +35,7 @@ const server = spawn(process.execPath, [
   "--experimental-strip-types",
   "--experimental-transform-types",
   "--env-file-if-exists=.env",
-  "src/server.ts",
+  "backend/server.ts",
 ], { env: { ...process.env, PORT: String(config.port), DATA_DIR: tmp, KEYS_DIR: tmp } });
 
 async function waitForServer(): Promise<void> {
@@ -84,7 +84,8 @@ async function api(
   method: string,
   p: string,
   body?: unknown,
-  token?: string
+  token?: string,
+  extraHeaders?: Record<string, string>
 ) : Promise<{ status: number; json: any }> {
   const res = await fetch(`${BASE}${p}`, {
     method,
@@ -92,6 +93,7 @@ async function api(
     headers: {
       "content-type": "application/json",
       ...(token ? { authorization: `Bearer ${token}` } : {}),
+      ...(extraHeaders || {}),
     },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
@@ -414,7 +416,9 @@ async function login(name: string, role: string): Promise<{ token: string; user:
   const ch = await api("POST", "/auth/challenge", { wallet });
   assert.equal(ch.status, 200, `challenge failed: ${JSON.stringify(ch.json)}`);
   const signature = bs58.encode(nacl.sign.detached(new TextEncoder().encode(ch.json.message), kp.secretKey));
-  const v = await api("POST", "/auth/verify", { wallet, signature, nonce: ch.json.nonce, role });
+  // demo gate: staff self-signup needs the invite header once other users exist
+  const staffHeaders = (role === "support" || role === "dev") ? { "x-staff-invite": "e2e-test" } : undefined;
+  const v = await api("POST", "/auth/verify", { wallet, signature, nonce: ch.json.nonce, role }, undefined, staffHeaders);
   assert.equal(v.status, 200, `verify failed: ${JSON.stringify(v.json)}`);
   return { token: v.json.token, user: v.json.user };
 }
