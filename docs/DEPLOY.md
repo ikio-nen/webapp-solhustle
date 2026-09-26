@@ -6,7 +6,7 @@ Vercel's serverless functions can't durably run it (ephemeral filesystem, no
 
 ## Frontend → Vercel (static)
 
-This repo ships a `vercel.json` that deploys `public/` as a static site —
+This repo ships a `vercel.json` that deploys `frontend/` as a static site —
 no build step needed. Just import the repo in Vercel and deploy.
 
 Pages: `/landing.html`, `/buyer.html`, `/seller.html`, `/admin.html`
@@ -29,7 +29,7 @@ Pages: `/landing.html`, `/buyer.html`, `/seller.html`, `/admin.html`
 
 ## Connect them
 
-In `public/config.js`, set:
+In `frontend/config.js`, set:
 
 ```js
 window.SOLHUSTLE_API_BASE = "https://solhustle-api.up.railway.app";
@@ -37,7 +37,7 @@ window.SOLHUSTLE_API_BASE = "https://solhustle-api.up.railway.app";
 
 Commit + push — Vercel redeploys the frontend automatically. Every API call
 (login, jobs, escrow, price ticker) goes through the shared `api()` helper in
-`public/common.js`, which prepends this base URL. Leave it as `""` when
+`frontend/common.js`, which prepends this base URL. Leave it as `""` when
 frontend and backend share an origin.
 
 ## Demo credentials

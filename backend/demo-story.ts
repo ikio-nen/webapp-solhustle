@@ -5,10 +5,10 @@ import path from "node:path";
 import { db } from "./db.ts";
 import { config } from "./config.ts";
 import { ensureDemoActors, seedTaxonomy } from "./seed.ts";
-import { requestAirdrop, conn, buildSignedTransfer } from "./solana.ts";
+import { requestAirdrop, conn, buildSignedTransfer } from "../solana/solana.ts";
 import { quoteUsdToSol } from "./gemini.ts";
 import { recomputeLeaderboard } from "./leaderboard.ts";
-import { initEscrow, fundEscrow, releaseEscrow, refundEscrow } from "./escrow.ts";
+import { initEscrow, fundEscrow, releaseEscrow, refundEscrow } from "../solana/escrow.ts";
 import { audit } from "./audit.ts";
 
 

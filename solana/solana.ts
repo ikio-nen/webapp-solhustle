@@ -16,9 +16,9 @@ const origLookup = dns.lookup;
 
 import * as web3 from "@solana/web3.js";
 import bs58 from "bs58";
-import { db } from "./db.ts";
-import { config, explorerTx } from "./config.ts";
-import { HttpError, tooMany } from "./util.ts";
+import { db } from "../backend/db.ts";
+import { config, explorerTx } from "../backend/config.ts";
+import { HttpError, tooMany } from "../backend/util.ts";
 
 export const conn = new web3.Connection(
   config.rpcUrl || web3.clusterApiUrl(config.chain),
@@ -216,7 +216,7 @@ export function recordTx(jobId: number, signature: string, instructionType: stri
        VALUES (?, ?, ?, ?)`
     )
     .run(jobId, signature, instructionType, lamports);
-  import("./neon.ts").then(({ syncTxToNeon }) =>
+  import("../backend/neon.ts").then(({ syncTxToNeon }) =>
     syncTxToNeon({ job_id: jobId, tx_signature: signature, instruction_type: instructionType, amount_lamports: lamports })
   ).catch(() => {});
   return Number(info.changes) > 0;

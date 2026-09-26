@@ -1,6 +1,6 @@
 import { db } from "./db.ts";
-import { conn } from "./solana.ts";
-import { reconcileAllJobs } from "./escrow.ts";
+import { conn } from "../solana/solana.ts";
+import { reconcileAllJobs } from "../solana/escrow.ts";
 import { listAudit, audit } from "./audit.ts";
 import { bad, parseIntOr } from "./util.ts";
 import { h } from "./util.ts";

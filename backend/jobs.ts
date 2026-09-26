@@ -10,11 +10,11 @@ import {
   requireString,
   optionalString,
 } from "./util.ts";
-import { initEscrow, fundEscrow, releaseEscrow, refundEscrow } from "./escrow.ts";
+import { initEscrow, fundEscrow, releaseEscrow, refundEscrow } from "../solana/escrow.ts";
 import { quoteUsdToSol } from "./gemini.ts";
 import { audit } from "./audit.ts";
 import { explorerTx } from "./config.ts";
-import { conn } from "./solana.ts";
+import { conn } from "../solana/solana.ts";
 import { h } from "./util.ts";
 import { syncJobToNeon, syncApplicationToNeon, syncDeliveryToNeon } from "./neon.ts";
 

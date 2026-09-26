@@ -22,11 +22,11 @@ process.env.PORT = String(findFreePortSync());
 process.env.JWT_SECRET = "test-secret";
 if (process.env.TEST_SOLANA_RPC_URL) process.env.SOLANA_RPC_URL = process.env.TEST_SOLANA_RPC_URL;
 
-const { db } = await import("../src/db.ts");
-const { config, explorerTx } = await import("../src/config.ts");
-const { conn, requestAirdrop, getSolBalance } = await import("../src/solana.ts");
-const { seedTaxonomy } = await import("../src/seed.ts");
-const { platformKeypair } = await import("../src/keys.ts");
+const { db } = await import("../backend/db.ts");
+const { config, explorerTx } = await import("../backend/config.ts");
+const { conn, requestAirdrop, getSolBalance } = await import("../solana/solana.ts");
+const { seedTaxonomy } = await import("../backend/seed.ts");
+const { platformKeypair } = await import("../backend/keys.ts");
 
 const BASE = `http://localhost:${config.port}`;
 

@@ -2,7 +2,7 @@ import { db } from "./db.ts";
 import { bad, conflict, forbidden, notFound, parseIntOr, requireString } from "./util.ts";
 import { h } from "./util.ts";
 import { getJob, touchJobSafe } from "./jobs-helpers.ts";
-import { releaseEscrow } from "./escrow.ts";
+import { releaseEscrow } from "../solana/escrow.ts";
 import { audit } from "./audit.ts";
 
 /**

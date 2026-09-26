@@ -1,1 +1,1 @@
-{"$schema":"https://openapi.vercel.sh/vercel.json","buildCommand":null,"outputDirectory":"public"}
+{"$schema": "https://openapi.vercel.sh/vercel.json", "buildCommand": null, "outputDirectory": "frontend"}

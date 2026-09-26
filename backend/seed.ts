@@ -4,7 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { db } from "./db.ts";
 import { config } from "./config.ts";
-import { requestAirdrop } from "./solana.ts";
+import { requestAirdrop } from "../solana/solana.ts";
 import { platformKeypair } from "./keys.ts";
 import { recomputeLeaderboard } from "./leaderboard.ts";
 
@@ -82,7 +82,7 @@ export async function ensureDemoActors(fund: boolean): Promise<DemoActor[]> {
     for (const a of actors) {
       try {
         const pub = new web3.PublicKey(a.wallet);
-        const existing = await (await import("./solana.ts")).getSolBalance(pub);
+        const existing = await (await import("../solana/solana.ts")).getSolBalance(pub);
         if (existing < 200_000_000) {
           const res = await requestAirdrop(pub);
           console.log(`  airdropped 1 SOL to ${a.name}: ${res.signature.slice(0, 16)}…`);

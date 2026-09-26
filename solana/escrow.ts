@@ -1,9 +1,9 @@
 import * as web3 from "@solana/web3.js";
 import fs from "node:fs";
 import path from "node:path";
-import { db } from "./db.ts";
-import { config, explorerAccount, explorerTx } from "./config.ts";
-import { platformKeypair } from "./keys.ts";
+import { db } from "../backend/db.ts";
+import { config, explorerAccount, explorerTx } from "../backend/config.ts";
+import { platformKeypair } from "../backend/keys.ts";
 import {
   conn,
   buildSignedTransfer,
@@ -12,7 +12,7 @@ import {
   getEscrowAccountInfo,
   type ConfirmResult,
 } from "./solana.ts";
-import { bad, conflict, notFound } from "./util.ts";
+import { bad, conflict, notFound } from "../backend/util.ts";
 
 /**
  * Escrow custody model (v1): a real on-chain account per job, funded by the buyer
@@ -51,7 +51,7 @@ export async function initEscrow(job: { id: number; escrow_address: string | nul
   const address = escrowKp.publicKey.toBase58();
   if (!job.escrow_address) {
     db.prepare("UPDATE jobs SET escrow_address = ? WHERE id = ?").run(address, job.id);
-    import("./neon.ts").then(({ syncJobToNeon }) => {
+    import("../backend/neon.ts").then(({ syncJobToNeon }) => {
       const updated = db.prepare("SELECT * FROM jobs WHERE id = ?").get(job.id) as any;
       if (updated) syncJobToNeon(updated).catch(() => {});
     }).catch(() => {});

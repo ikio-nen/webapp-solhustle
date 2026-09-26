@@ -76,10 +76,10 @@ import { healthRoute, reconciliationRoute, auditRoute, listUsers, setUserStatus,
 import { getSolUsdRate } from "./gemini.ts";
 import { bad, tooMany, parseIntOr, notFound } from "./util.ts";
 import { platformKeypair } from "./keys.ts";
-import { buildSignedTransfer, conn } from "./solana.ts";
+import { buildSignedTransfer, conn } from "../solana/solana.ts";
 import { explorerAccount } from "./config.ts";
 import { ensureDemoActors, seedTaxonomy } from "./seed.ts";
-import { requestAirdrop } from "./solana.ts";
+import { requestAirdrop } from "../solana/solana.ts";
 import type { User } from "./db.ts";
 
 const app = express();
@@ -307,7 +307,7 @@ app.post("/demo/fast-forward/:id", requireAuth, h_wrap(async (req, res) => {
 
 // --- frontend --------------------------------------------------------------------------
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-app.use(express.static(path.join(__dirname, "../public")));
+app.use(express.static(path.join(__dirname, "../frontend")));
 app.get(["/", "/landing"], (_req, res) => res.sendFile(path.join(__dirname, "../public/landing.html")));
 app.get("/buyer", (_req, res) => res.sendFile(path.join(__dirname, "../public/buyer.html")));
 app.get("/seller", (_req, res) => res.sendFile(path.join(__dirname, "../public/seller.html")));

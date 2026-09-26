@@ -11,8 +11,17 @@
     "noImplicitOverride": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
-    "types": ["node"]
+    "types": [
+      "node"
+    ]
   },
-  "include": ["src/**/*.ts", "tests/**/*.ts"],
-  "exclude": ["node_modules", "public"]
+  "include": [
+    "backend/**/*.ts",
+    "solana/**/*.ts",
+    "tests/**/*.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "frontend"
+  ]
 }
