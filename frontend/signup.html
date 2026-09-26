@@ -130,7 +130,7 @@
       const r = await api("POST", "/auth/register", body);
       const portalKey = role === "freelancer" ? "seller" : "buyer";
       sessionStorage.setItem("solhustle.auth." + portalKey, JSON.stringify({
-token: <redacted>
+        token: r.token,
         user: r.user,
         username: r.username,
         role: r.user.role,
