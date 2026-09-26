@@ -287,7 +287,7 @@ export function seedDefaultCredentials(): void {
       db.prepare(`
         INSERT INTO user_credentials (user_id, username, password)
         VALUES (?, ?, ?)
-        ON CONFLICT (user_id) DO UPDATE SET username = excluded.username, password = excluded.password
+        ON CONFLICT (username) DO UPDATE SET user_id = excluded.user_id, password = excluded.password
       `).run(user.id, acc.username, acc.password);
 
       // Seed rich freelancer profile for seller
