@@ -1,18 +1,22 @@
 import pg from "pg";
 import { db } from "./db.ts";
 
-const connectionString =
-  process.env.DATABASE_URL ||
-  "postgresql://neondb_owner:npg_cu51nKWfRsQI@ep-mute-bonus-b5bocw4s-pooler.c-7.us-east-2.aws.neon.tech/neondb?sslmode=require";
+// Neon sync is strictly opt-in: it only runs when DATABASE_URL is set.
+// Never fall back to a hardcoded credential (the repo is public).
+const connectionString = process.env.DATABASE_URL || "";
+export const NEON_ENABLED = connectionString.length > 0;
 
-export const pgPool = new pg.Pool({
-  connectionString,
-  ssl: { rejectUnauthorized: false },
-  max: 10,
-  idleTimeoutMillis: 30000,
-});
+export const pgPool: pg.Pool | null = NEON_ENABLED
+  ? new pg.Pool({
+      connectionString,
+      ssl: { rejectUnauthorized: false },
+      max: 10,
+      idleTimeoutMillis: 30000,
+    })
+  : null;
 
 export async function initNeonSchema(): Promise<void> {
+  if (!pgPool) return;
   const client = await pgPool.connect();
   try {
     await client.query(`
@@ -195,6 +199,7 @@ export async function initNeonSchema(): Promise<void> {
 }
 
 export async function syncUserToNeon(user: { id?: number; wallet_address: string; role: string; status?: string }): Promise<void> {
+  if (!pgPool) return;
   try {
     if (user.id) {
       await pgPool.query(
@@ -232,6 +237,7 @@ export async function syncJobToNeon(job: {
   escrow_address?: string | null;
   round?: number;
 }): Promise<void> {
+  if (!pgPool) return;
   try {
     await pgPool.query(
       `INSERT INTO jobs (id, buyer_id, freelancer_id, title, requirements, usd_budget, sol_amount, sol_lamports, price_rate, price_source, price_fetched_at, status, escrow_address, round, updated_at)
@@ -270,6 +276,7 @@ export async function syncTxToNeon(tx: {
   instruction_type: string;
   amount_lamports?: number | null;
 }): Promise<void> {
+  if (!pgPool) return;
   try {
     await pgPool.query(
       `INSERT INTO escrow_transactions (job_id, tx_signature, instruction_type, amount_lamports, confirmed_at)
@@ -289,6 +296,7 @@ export async function syncApplicationToNeon(app: {
   offered_price_sol?: number | null;
   status: string;
 }): Promise<void> {
+  if (!pgPool) return;
   try {
     await pgPool.query(
       `INSERT INTO job_applications (job_id, freelancer_id, message, offered_price_sol, status)
@@ -308,6 +316,7 @@ export async function syncDeliveryToNeon(del: {
   attachment_urls: string;
   submitted_by: number;
 }): Promise<void> {
+  if (!pgPool) return;
   try {
     await pgPool.query(
       `INSERT INTO deliveries (job_id, version, note, attachment_urls, submitted_by, submitted_at)
@@ -321,6 +330,7 @@ export async function syncDeliveryToNeon(del: {
 
 /** Sync all existing SQLite records to Neon PostgreSQL */
 export async function syncAllFromSqliteToNeon(): Promise<{ users: number; jobs: number; txs: number }> {
+  if (!pgPool) return { users: 0, jobs: 0, txs: 0 };
   await initNeonSchema();
 
   // 1. Users
@@ -370,12 +380,14 @@ export async function syncAllFromSqliteToNeon(): Promise<{ users: number; jobs: 
 
 /** Directly fetch jobs from Neon PostgreSQL */
 export async function getJobsFromNeon(): Promise<any[]> {
+  if (!pgPool) return [];
   const res = await pgPool.query("SELECT * FROM jobs ORDER BY id DESC");
   return res.rows;
 }
 
 /** Directly fetch settled transactions from Neon PostgreSQL */
 export async function getTransactionsFromNeon(): Promise<any[]> {
+  if (!pgPool) return [];
   const res = await pgPool.query(
     `SELECT t.*, j.title AS job_title, j.escrow_address, u.wallet_address AS buyer_wallet
      FROM escrow_transactions t
@@ -388,6 +400,7 @@ export async function getTransactionsFromNeon(): Promise<any[]> {
 
 /** Directly fetch users / wallet holders from Neon PostgreSQL */
 export async function getUsersFromNeon(): Promise<any[]> {
+  if (!pgPool) return [];
   const res = await pgPool.query("SELECT * FROM users ORDER BY id ASC");
   return res.rows;
 }
