@@ -85,6 +85,17 @@ import type { User } from "./db.ts";
 const app = express();
 app.use(express.json({ limit: "1mb" }));
 
+// --- CORS for split deployments (frontend on Vercel, backend on Railway, …) ---
+// Same-origin setups are unaffected. Auth uses Bearer tokens (no cookies), so a
+// wildcard origin is sufficient. Set FRONTEND_ORIGIN to lock it down in prod.
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", process.env.FRONTEND_ORIGIN || "*");
+  res.header("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.header("Access-Control-Allow-Methods", "GET,POST,PUT,PATCH,DELETE,OPTIONS");
+  if (req.method === "OPTIONS") return res.sendStatus(204);
+  next();
+});
+
 // --- simple in-memory rate limiter -------------------------------------------
 const buckets = new Map<string, { tokens: number; last: number }>();
 app.use((req, res, next) => {

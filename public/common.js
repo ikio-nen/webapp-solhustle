@@ -28,7 +28,7 @@ function b58decode(str) {
 async function api(method, path, body, token) {
   const headers = { "content-type": "application/json" };
   if (token) headers["authorization"] = "Bearer " + token;
-  const res = await fetch(path, {
+  const res = await fetch((window.SOLHUSTLE_API_BASE || "") + path, {
     method,
     headers,
     body: body === undefined ? undefined : JSON.stringify(body),

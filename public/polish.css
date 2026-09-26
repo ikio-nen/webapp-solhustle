@@ -1,0 +1,85 @@
+/* Solhustle polish layer — additive only. Loaded AFTER style.css.
+   Overrides nothing structural; safe to delete this file to revert. */
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  /* faint ambient accent glow, sits behind everything */
+  background-image: radial-gradient(900px 480px at 50% -120px, rgba(110, 168, 254, 0.07), transparent 70%);
+  background-attachment: fixed;
+}
+
+::selection {
+  background: rgba(110, 168, 254, 0.35);
+  color: #fff;
+}
+
+/* --- Buttons: gentle lift on hover, press on active (colors untouched) --- */
+button.btn, a.btn {
+  transition: transform .18s ease, box-shadow .18s ease, opacity .15s ease, border-color .15s ease;
+  will-change: transform;
+}
+button.btn:hover, a.btn:hover {
+  opacity: 1;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 18px rgba(110, 168, 254, 0.25);
+  text-decoration: none;
+}
+button.btn.sec:hover, a.btn.sec:hover {
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+}
+button.btn:active, a.btn:active {
+  transform: translateY(0) scale(0.98);
+  box-shadow: none;
+}
+button.btn:disabled {
+  transform: none;
+  box-shadow: none;
+}
+
+/* --- Cards: barely-there border glow on hover --- */
+.card {
+  transition: border-color .2s ease, box-shadow .2s ease;
+}
+.card:hover {
+  border-color: #33415580;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+/* --- Nav: frosted glass --- */
+.app-nav {
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+/* --- Inputs: accent focus ring --- */
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: var(--acc);
+  box-shadow: 0 0 0 3px rgba(110, 168, 254, 0.18);
+}
+
+/* --- Links & buttons: visible keyboard focus --- */
+a:focus-visible, button:focus-visible {
+  outline: 2px solid var(--acc);
+  outline-offset: 2px;
+}
+
+/* --- Pills: soft pop on hover --- */
+.pill {
+  transition: transform .15s ease;
+}
+.pill:hover {
+  transform: scale(1.05);
+}
+
+/* --- Respect users who prefer no motion --- */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
