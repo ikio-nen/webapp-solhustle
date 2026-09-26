@@ -6,6 +6,7 @@
   <title>Solhustle — Buyer Portal</title>
   <link rel="stylesheet" href="/css/style.css" />
   <link rel="stylesheet" href="/css/polish.css" />
+  <link rel="stylesheet" href="/css/components.css" />
 </head>
 <body>
 <main>
@@ -21,6 +22,10 @@
     </div>
     <div class="row">
       <span class="pill ok" id="b-balance" style="font-weight:700; font-size:12px;">balance: …</span>
+      <span class="notif-bell" id="notif-bell" title="Notifications">
+        <button class="btn sec notif-bell-btn" style="font-size:14px;">🔔</button>
+        <span class="notif-badge" style="display:none;">0</span>
+      </span>
       <button class="btn sec" id="btn-airdrop" style="font-size:11px;">Request Airdrop</button>
       <button class="btn sec" id="btn-copy" style="font-size:11px;">Copy Wallet</button>
       <button class="btn sec" id="btn-signout" style="font-size:11px; border-color:rgba(239,68,68,0.4); color:#f87171;">Sign Out</button>
@@ -71,12 +76,26 @@
 <script src="/vendor/solana-web3.min.js"></script>
 <script src="/js/config.js"></script>
 <script src="/js/common.js"></script>
+<script src="/js/components.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
 <script src="/js/polish.js"></script>
 <script>
   renderNavbar("buyer");
 
   let session = null;
+
+  // shortlist dropdown toggle (one open at a time)
+  window.toggleShortlist = (jobId) => {
+    const el = document.getElementById("shortlist-" + jobId);
+    const wasOpen = el.classList.contains("open");
+    document.querySelectorAll(".shortlist.open").forEach(s => s.classList.remove("open"));
+    if (!wasOpen) el.classList.add("open");
+  };
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".shortlist")) {
+      document.querySelectorAll(".shortlist.open").forEach(s => s.classList.remove("open"));
+    }
+  });
 
   async function init() {
     try {
@@ -86,6 +105,7 @@
       updateBalance();
       loadJobs();
       updateQuote();
+      SolUI.Notifications.mount("notif-bell", session.token, () => loadJobs());
     } catch (err) {
       toast("Auth initialization failed: " + err.message, "err");
     }
@@ -190,31 +210,17 @@
           actionButtons += `<button class="btn ok" onclick="fundEscrow(${j.id})">🔐 Fund Escrow (${fmtSol(j.sol_amount * 1e9)} SOL)</button>`;
         }
 
-        // Applicants
+        // Applicants — shortlist dropdown
         let appsHtml = "";
         const apps = d.applications || [];
+        let needsShortlist = false;
         if (j.status === "funded" && apps.length > 0) {
-          appsHtml = `<div style="margin-top:14px; background:var(--card2); border:1px solid var(--line); border-radius:6px; padding:12px;">
-            <div style="font-size:12px; font-weight:700; color:var(--acc); text-transform:uppercase; margin-bottom:8px;">
-              📋 Candidates (${apps.length}):
-            </div>
-            <div style="display:flex; flex-direction:column; gap:8px;">
-              ${apps.map(a => `
-                <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; background:var(--card2); padding:8px 12px; border-radius:4px; border:1px solid var(--line);">
-                  <div>
-                    <span class="mono" style="font-weight:600; color:#fff;">${short(a.wallet_address, 14)}</span>
-                    <div class="dim" style="font-size:11px; margin-top:2px;">"${esc(a.message || 'Ready to deliver.')}"</div>
-                  </div>
-                  <div>
-                    ${a.status === 'pending' ? `
-                      <button class="btn" style="padding:6px 14px; font-size:11px;" onclick="acceptApp(${j.id}, ${a.id})">
-                        🤝 Accept & Start Contract
-                      </button>
-                    ` : `<span class="pill ${a.status === 'accepted' ? 'ok' : 'dim'}">${esc(a.status)}</span>`}
-                  </div>
-                </div>
-              `).join("")}
-            </div>
+          needsShortlist = true;
+          appsHtml = `<div class="shortlist" id="shortlist-${j.id}" style="margin-top:14px;">
+            <button class="btn sec" onclick="event.stopPropagation(); toggleShortlist(${j.id})">
+              👥 Shortlist — ${apps.length} applicant${apps.length > 1 ? "s" : ""} ▾
+            </button>
+            <div class="shortlist-menu" id="shortlist-menu-${j.id}"><div class="notif-empty">loading applicants…</div></div>
           </div>`;
         } else if (j.status === "funded" && apps.length === 0) {
           appsHtml = `<div class="dim" style="font-size:12px; margin:10px 0; background:var(--card2); padding:10px 12px; border-radius:6px; border:1px solid var(--line); display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;">
@@ -229,19 +235,24 @@
           </div>`;
         }
 
-        // Deliveries
+        // Deliveries — work display (testimonial style)
         let deliveriesHtml = "";
         const deliveries = d.deliveries || [];
         if (deliveries.length > 0) {
-          deliveriesHtml = `<div style="margin:14px 0 10px; background:var(--card2); border:1px solid var(--line); border-radius:6px; padding:12px;">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          let urls = [];
+          try {
+            const raw = deliveries[0].attachment_urls;
+            urls = Array.isArray(raw) ? raw : JSON.parse(raw || "[]");
+          } catch { urls = [String(deliveries[0].attachment_urls || "")]; }
+          urls = urls.filter(Boolean);
+          deliveriesHtml = `<div class="work-card" style="margin:14px 0 10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
               <span class="pill ok">📦 DELIVERABLE READY FOR REVIEW (v${deliveries[0].version})</span>
             </div>
-            <p style="margin:4px 0 8px; font-size:13px; color:var(--txt);">
-              <strong>Notes:</strong> ${esc(deliveries[0].note || 'Deliverable ready for evaluation')}
-            </p>
-            <div style="background:var(--card); padding:8px 12px; border-radius:4px; border:1px solid var(--line); font-size:12px;">
-              <strong>Deliverable Link:</strong> <a href="${esc(deliveries[0].attachment_urls)}" target="_blank" rel="noopener">${esc(deliveries[0].attachment_urls)} ↗</a>
+            <div class="w-quote">“</div>
+            <p class="w-note">${esc(deliveries[0].note || "Deliverable ready for evaluation")}</p>
+            <div class="work-links">
+              ${urls.map(u => `<a href="${esc(u)}" target="_blank" rel="noopener">🔗 ${esc(u.length > 42 ? u.slice(0, 42) + "…" : u)} ↗</a>`).join("")}
             </div>
             ${j.status === 'delivered' ? `
               <div class="row" style="margin-top:12px; gap:10px;">
@@ -301,6 +312,7 @@
             </div>
           </div>
           ${escrowHtml}
+          ${SolUI.stepperHTML(j.status)}
           ${appsHtml}
           ${deliveriesHtml}
           <div class="row" style="margin-top:12px; gap:8px;">
@@ -309,6 +321,9 @@
           ${txsHtml}
         `;
         container.appendChild(card);
+        if (needsShortlist) {
+          SolUI.renderShortlist($(`#shortlist-menu-${j.id}`), j.id, session.token, { onChange: loadJobs });
+        }
       }
     } catch (err) {
       container.innerHTML = `<div class="card err-text">Failed to load jobs: ${esc(err.message)}</div>`;
