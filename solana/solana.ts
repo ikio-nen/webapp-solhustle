@@ -192,19 +192,35 @@ export async function confirmBuyerFunding(
   return { signature, explorerUrl: explorerTx(signature), alreadyRecorded: !inserted };
 }
 
-/** Verify on-chain state immediately without a polling retry loop */
+/**
+ * Honestly verify on-chain confirmation: poll until the tx reaches
+ * confirmed/finalized status, or the deadline passes. Throws if the tx
+ * errored OR if it never landed (dropped, expired blockhash, no funds).
+ * Never silently passes on an unknown signature.
+ */
 export async function confirmSignature(signature: string, _blockhash?: string, _lastValidBlockHeight?: number): Promise<void> {
-  // 500ms breather for slot leader block ingestion
-  await sleep(500);
-  try {
-    const statuses = await conn.getSignatureStatuses([signature], { searchTransactionHistory: true });
-    const st = statuses?.value?.[0];
-    if (st && st.err) {
+  const deadline = Date.now() + 45_000;
+  for (;;) {
+    let st: { err: unknown; confirmationStatus?: string | null } | null | undefined;
+    try {
+      const statuses = await conn.getSignatureStatuses([signature], { searchTransactionHistory: true });
+      st = statuses?.value?.[0] as typeof st;
+    } catch {
+      st = undefined; // transient RPC error; keep polling until deadline
+    }
+    if (st?.err) {
       throw new HttpError(502, `tx failed on-chain: ${JSON.stringify(st.err)}`);
     }
-  } catch (err) {
-    if (err instanceof HttpError) throw err;
-    // Non-fatal network glitch on status check; tx is in flight
+    if (st && (st.confirmationStatus === "confirmed" || st.confirmationStatus === "finalized")) {
+      return;
+    }
+    if (Date.now() >= deadline) {
+      throw new HttpError(
+        502,
+        "tx was not confirmed on Solana (dropped, expired blockhash, or insufficient funds); nothing was recorded — try again"
+      );
+    }
+    await sleep(2000);
   }
 }
 

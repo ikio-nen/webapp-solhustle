@@ -382,12 +382,10 @@ function promptSignFundingModal(jobId, built, session) {
         let signature = "";
 
         if (session.secretKeyB58 && window.solanaWeb3) {
-          let blockhash = built.blockhash;
-          if (!blockhash) {
-            const tempConn = new solanaWeb3.Connection("https://api.devnet.solana.com", "confirmed");
-            const latest = await tempConn.getLatestBlockhash();
-            blockhash = latest.blockhash;
-          }
+          // Fresh blockhash at click time: the one fetched when the modal opened may have expired.
+          const tempConn = new solanaWeb3.Connection("https://api.devnet.solana.com", "confirmed");
+          const latest = await tempConn.getLatestBlockhash();
+          const blockhash = latest.blockhash;
           const secret = b58decode(session.secretKeyB58);
           const kp = solanaWeb3.Keypair.fromSecretKey(secret);
           const tx = new solanaWeb3.Transaction();
